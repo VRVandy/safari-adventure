@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SpinWheel } from '@/components/SpinWheel';
 import { AnimalCard } from '@/components/AnimalCard';
+import { AnimalPreview } from '@/components/AnimalPreview';
 import { Confetti } from '@/components/Confetti';
 import { useSpinWheel } from '@/hooks/useSpinWheel';
 import { useAnimalData } from '@/hooks/useAnimalData';
@@ -12,7 +13,7 @@ import { Animal } from '@/types/animal';
 export default function HomeScreen() {
   const [confetti, setConfetti] = useState(false);
   const [centerEmoji, setCenterEmoji] = useState('?');
-  const [revealedName, setRevealedName] = useState('');
+  const [showWheel, setShowWheel] = useState(true);
   const fetchPromiseRef = useRef<Promise<Animal | null> | null>(null);
 
   const { phase, spinCount, pickedAnimals, startFetch, commitSpin, confirmAnimals, rejectLastSpin, reset } = useAnimalData();
@@ -20,12 +21,11 @@ export default function HomeScreen() {
   function handleSpinEnd() {
     fetchPromiseRef.current?.then(animal => {
       if (!animal) return;
-      // Reveal immediately — image & sound load in the background
       setCenterEmoji(animal.emoji);
-      setRevealedName(animal.name);
       setConfetti(true);
       setTimeout(() => setConfetti(false), 200);
       commitSpin(animal);
+      setShowWheel(false); // replace wheel with preview
     });
   }
 
@@ -33,16 +33,23 @@ export default function HomeScreen() {
 
   function handleSpin() {
     setCenterEmoji('?');
-    setRevealedName('');
+    setShowWheel(true);
     fetchPromiseRef.current = startFetch();
     spin();
   }
 
-  const spinLabel = spinCount === 0
-    ? 'Spin for animal 1 of 2'
-    : spinCount === 1
-    ? 'Great pick! Now spin for animal 2 of 2'
-    : '';
+  function handleRejectSpin() {
+    rejectLastSpin();
+    setCenterEmoji('?');
+    setShowWheel(true);
+  }
+
+  // Progress dots: filled based on committed animals
+  const dot1Filled = pickedAnimals.length >= 1;
+  const dot2Filled = pickedAnimals.length >= 2;
+
+  const isPreviewPhase = !showWheel && !isSpinning;
+  const previewAnimal = pickedAnimals[pickedAnimals.length - 1] ?? null;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -57,57 +64,56 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.shell}>
-          {phase === 'spin' && (
+          {(phase === 'spin' || phase === 'confirm') && (
             <View style={styles.spinPhase}>
               {/* Progress dots */}
               <View style={styles.dots}>
-                <View style={[styles.dot, spinCount >= 1 && styles.dotFilled]} />
-                <View style={[styles.dot, spinCount >= 2 && styles.dotFilled]} />
+                <View style={[styles.dot, dot1Filled && styles.dotFilled]} />
+                <View style={[styles.dot, dot2Filled && styles.dotFilled]} />
               </View>
-              <Text style={styles.spinLabel}>{spinLabel}</Text>
 
-              <SpinWheel
-                rotation={rotation}
-                emojis={displayEmojis}
-                centerEmoji={centerEmoji}
-                onSpin={handleSpin}
-                disabled={isSpinning}
-              />
+              {/* Wheel — shown while spinning or before first spin */}
+              {showWheel && (
+                <>
+                  <Text style={styles.spinLabel}>
+                    {spinCount === 0 ? 'Spin for animal 1 of 2' : 'Spin for animal 2 of 2'}
+                  </Text>
+                  <SpinWheel
+                    rotation={rotation}
+                    emojis={displayEmojis}
+                    centerEmoji={centerEmoji}
+                    onSpin={handleSpin}
+                    disabled={isSpinning}
+                  />
+                </>
+              )}
 
-              {revealedName ? (
-                <Text style={styles.revealedName}>{revealedName}</Text>
-              ) : null}
-            </View>
-          )}
+              {/* Preview — shown after each spin, replacing the wheel */}
+              {isPreviewPhase && previewAnimal && (
+                <>
+                  <Text style={styles.spinLabel}>
+                    {phase === 'confirm' ? `You found ${previewAnimal.name}!` : `You found ${previewAnimal.name}!`}
+                  </Text>
+                  <AnimalPreview animal={previewAnimal} />
 
-          {phase === 'confirm' && (
-            <View style={styles.spinPhase}>
-              {/* Progress dots — both filled */}
-              <View style={styles.dots}>
-                <View style={[styles.dot, styles.dotFilled]} />
-                <View style={[styles.dot, styles.dotFilled]} />
-              </View>
-              <Text style={styles.spinLabel}>You chose {revealedName || pickedAnimals[1]?.name}!</Text>
-
-              <SpinWheel
-                rotation={rotation}
-                emojis={displayEmojis}
-                centerEmoji={centerEmoji}
-                onSpin={() => {}}
-                disabled={true}
-              />
-
-              {revealedName ? (
-                <Text style={styles.revealedName}>{revealedName}</Text>
-              ) : null}
-
-              <Pressable style={styles.proceedBtn} onPress={confirmAnimals}>
-                <Text style={styles.proceedBtnText}>See your animals! →</Text>
-              </Pressable>
-
-              <Pressable style={styles.reSpinBtn} onPress={() => { rejectLastSpin(); setRevealedName(''); setCenterEmoji('?'); }}>
-                <Text style={styles.reSpinBtnText}>↺  Spin again for a different animal</Text>
-              </Pressable>
+                  {phase === 'confirm' ? (
+                    // After spin 2 — proceed or re-spin
+                    <>
+                      <Pressable style={styles.proceedBtn} onPress={confirmAnimals}>
+                        <Text style={styles.proceedBtnText}>See both animals! →</Text>
+                      </Pressable>
+                      <Pressable style={styles.reSpinBtn} onPress={handleRejectSpin}>
+                        <Text style={styles.reSpinBtnText}>↺  Spin again for a different animal</Text>
+                      </Pressable>
+                    </>
+                  ) : (
+                    // After spin 1 — spin again for animal 2
+                    <Pressable style={styles.proceedBtn} onPress={handleSpin}>
+                      <Text style={styles.proceedBtnText}>Spin for animal 2 →</Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
             </View>
           )}
 
@@ -122,7 +128,7 @@ export default function HomeScreen() {
                 <AnimalCard key={animal.name + i} animal={animal} />
               ))}
 
-              <Pressable style={styles.resetBtn} onPress={reset}>
+              <Pressable style={styles.resetBtn} onPress={() => { reset(); setShowWheel(true); setCenterEmoji('?'); }}>
                 <Text style={styles.resetBtnText}>New expedition!</Text>
               </Pressable>
             </View>
@@ -149,7 +155,6 @@ const styles = StyleSheet.create({
   dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: colors.jungleLight },
   dotFilled: { backgroundColor: colors.amber, borderColor: colors.amber },
   spinLabel: { fontSize: 14, color: colors.leafLight, letterSpacing: 1, fontWeight: '600', textTransform: 'uppercase' },
-  revealedName: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 22, color: colors.amber },
   resultsHeader: { alignItems: 'center', marginBottom: 28 },
   resultsTitle: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 28, color: colors.cream },
   resultsSub: { fontSize: 13, color: colors.leafLight, marginTop: 4 },

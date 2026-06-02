@@ -12,6 +12,9 @@ function getClient(): Anthropic {
   return _client;
 }
 
+const CLASSES = ['Mammal','Bird','Reptile','Fish','Amphibian','Insect','Arachnid','Mollusc','Crustacean','Worm','Marsupial','Primate'];
+const CONTINENTS = ['Africa','Asia','Europe','North America','South America','Australia','Antarctica'];
+
 // POST /api/animal
 // Body: { previousAnimals: string[] }
 animalRouter.post('/', async (req: Request, res: Response) => {
@@ -20,13 +23,18 @@ animalRouter.post('/', async (req: Request, res: Response) => {
     ? `Do NOT choose any of these: ${previousAnimals.join(', ')}.`
     : '';
 
+  const randomClass = CLASSES[Math.floor(Math.random() * CLASSES.length)];
+  const randomContinent = CONTINENTS[Math.floor(Math.random() * CONTINENTS.length)];
+  const seed = Math.floor(Math.random() * 9000) + 1000;
+
   try {
     const message = await getClient().messages.create({
       model: MODEL,
       max_tokens: 400,
       messages: [{
         role: 'user',
-        content: `Pick ONE random real animal from anywhere in the world. Be truly random — vary across all animal classes (mammals, birds, reptiles, fish, insects, amphibians, arachnids, molluscs, etc.), all continents, and all sizes from microscopic to enormous. Avoid defaulting to popular or well-known animals. ${exclusion}
+        content: `Pick ONE random ${randomClass} from ${randomContinent} (random seed: ${seed}). ${exclusion}
+Avoid: deep ocean or abyssal creatures (anglerfish, blobfish, gulper eel, giant squid, etc.), venomous or dangerous spiders and insects (funnel-web spider, bullet ant, giant centipede, etc.), and parasites or microscopic organisms (tapeworm, botfly, tongue louse, etc.). Choose an animal that is visually appealing and not frightening to a 4-year-old child.
 Return ONLY valid JSON, no markdown, no extra text:
 {
   "name": "common animal name",
