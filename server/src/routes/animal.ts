@@ -26,7 +26,7 @@ animalRouter.post('/', async (req: Request, res: Response) => {
       max_tokens: 1400,
       messages: [{
         role: 'user',
-        content: `Pick ONE random real animal from anywhere in the world. ${exclusion}
+        content: `Pick ONE random real animal from anywhere in the world. Be truly random — vary across all animal classes (mammals, birds, reptiles, fish, insects, amphibians, arachnids, molluscs, etc.), all continents, and all sizes from microscopic to enormous. Avoid defaulting to popular or well-known animals. ${exclusion}
 Return ONLY valid JSON, no markdown, no extra text:
 {
   "name": "common animal name",
