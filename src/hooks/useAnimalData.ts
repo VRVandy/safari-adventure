@@ -10,14 +10,27 @@ export function useAnimalData() {
   const [phase, setPhase] = useState<Phase>('spin');
   const [spinCount, setSpinCount] = useState(0);
   const [pickedAnimals, setPickedAnimals] = useState<Animal[]>([]);
-  const previousNames = useRef<string[]>([]);
+  const STORAGE_KEY = 'safari_seen_animals';
+
+  function loadSeenAnimals(): string[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  const previousNames = useRef<string[]>(loadSeenAnimals());
 
   // Stage 1: fetch only the Claude animal — resolves fast so the wheel
   // reveal is instant. Image + sound are fetched separately in stage 2.
   const startFetch = useCallback((): Promise<Animal | null> => {
     return fetchAnimal(previousNames.current)
       .then(animal => {
-        previousNames.current = [...previousNames.current, animal.name].slice(-20);
+        const updated = [...previousNames.current, animal.name].slice(-20);
+        previousNames.current = updated;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch {}
         return animal;
       })
       .catch(() => null);
