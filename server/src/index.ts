@@ -18,6 +18,15 @@ app.use('/api/animal', animalRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
+app.get('/debug-key', (_req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY ?? '';
+  res.json({
+    length: key.length,
+    prefix: key.slice(0, 10),
+    suffix: key.slice(-4),
+  });
+});
+
 app.listen(port, () => {
   console.log(`Safari Adventure server running on http://localhost:${port}`);
 });
