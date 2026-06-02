@@ -3,6 +3,7 @@ import path from 'path';
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { animalRouter } from './routes/animal';
 
 const app = express();
@@ -14,7 +15,16 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:8081')
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
-app.use('/api/animal', animalRouter);
+// Rate limit: 20 requests per hour per IP
+const limiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please try again later.' },
+});
+
+app.use('/api/animal', limiter, animalRouter);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
