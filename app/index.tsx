@@ -19,13 +19,16 @@ export default function HomeScreen() {
   const { phase, spinCount, pickedAnimals, startFetch, commitSpin, confirmAnimals, rejectLastSpin, reset } = useAnimalData();
 
   function handleSpinEnd() {
-    fetchPromiseRef.current?.then(animal => {
+    // Clear the ref immediately — prevents double-fire on Android
+    const promise = fetchPromiseRef.current;
+    fetchPromiseRef.current = null;
+    promise?.then(animal => {
       if (!animal) return;
       setCenterEmoji(animal.emoji);
       setConfetti(true);
       setTimeout(() => setConfetti(false), 200);
       commitSpin(animal);
-      setShowWheel(false); // replace wheel with preview
+      setShowWheel(false);
     });
   }
 
@@ -54,7 +57,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <Confetti active={confetti} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scroll}>
 
         {/* Header */}
         <View style={styles.header}>
@@ -143,6 +146,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.jungleDarkest },
+  scrollView: { flex: 1 },
   scroll: { flexGrow: 1, paddingBottom: 60 },
   header: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 32, paddingBottom: 20 },
   eyebrow: { fontSize: 12, letterSpacing: 2.5, textTransform: 'uppercase', color: colors.leafLight, marginBottom: 8 },

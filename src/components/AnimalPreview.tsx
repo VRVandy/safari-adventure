@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Image, StyleSheet, Animated } from 'react-native';
 import { Animal } from '@/types/animal';
 import { colors } from '@/constants/theme';
 
@@ -8,13 +8,26 @@ interface Props {
 }
 
 export function AnimalPreview({ animal }: Props) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (animal.imageUrl) {
+      fadeAnim.setValue(0);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [animal.imageUrl]);
+
   return (
     <View style={styles.container}>
       <View style={styles.photoWrap}>
         {animal.imageUrl ? (
-          <Image
+          <Animated.Image
             source={{ uri: animal.imageUrl }}
-            style={styles.photo}
+            style={[styles.photo, { opacity: fadeAnim }]}
             resizeMode="contain"
           />
         ) : (

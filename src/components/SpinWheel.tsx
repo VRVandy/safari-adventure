@@ -38,7 +38,7 @@ const AnimatedView = Animated.createAnimatedComponent(View);
 
 export function SpinWheel({ rotation, emojis, centerEmoji, onSpin, disabled }: Props) {
   const style = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value % 360}deg` }],
+    transform: [{ rotate: `${rotation.value}deg` }],
   }));
 
   return (
