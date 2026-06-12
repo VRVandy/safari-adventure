@@ -12,7 +12,7 @@ function getClient(): Anthropic {
   return _client;
 }
 
-const CLASSES = ['Mammal','Bird','Reptile','Fish','Amphibian','Insect','Arachnid','Crustacean','Worm','Marsupial','Primate'];
+const CLASSES = ['Mammal','Bird','Reptile','Fish','Amphibian','Insect','Arachnid','Mollusc','Crustacean','Worm','Marsupial','Primate'];
 const CONTINENTS = ['Africa','Asia','Europe','North America','South America','Australia','Antarctica'];
 
 // POST /api/animal
