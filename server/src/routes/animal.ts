@@ -3,7 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 
 export const animalRouter = Router();
 
-const MODEL = 'claude-sonnet-4-6';
+const FAST_MODEL = 'claude-haiku-4-5-20251001'; // animal fetch — speed matters
+const MODEL = 'claude-sonnet-4-6';              // more facts — quality matters
 
 // Lazy init so dotenv has loaded by the time the first request comes in
 let _client: Anthropic | null = null;
@@ -33,7 +34,7 @@ animalRouter.post('/', async (req: Request, res: Response) => {
 
   try {
     const message = await getClient().messages.create({
-      model: MODEL,
+      model: FAST_MODEL,
       max_tokens: 400,
       messages: [{
         role: 'user',
