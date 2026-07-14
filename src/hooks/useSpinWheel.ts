@@ -1,10 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
-import {
-  useSharedValue,
-  withTiming,
-  Easing,
-  runOnJS,
-} from 'react-native-reanimated';
+import { Animated, Easing } from 'react-native';
 import { WHEEL_EMOJIS } from '@/constants/theme';
 
 function pickEmojis(): string[] {
@@ -16,38 +11,43 @@ function pickEmojis(): string[] {
 }
 
 export function useSpinWheel(onSpinEnd: () => void) {
-  const rotation = useSharedValue(0);
+  const rotationDeg = useRef(new Animated.Value(0)).current;
+  const currentDeg = useRef(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [displayEmojis, setDisplayEmojis] = useState(() => WHEEL_EMOJIS.slice(0, 10));
   const shuffleTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onSpinEndRef = useRef(onSpinEnd);
+  onSpinEndRef.current = onSpinEnd;
 
   const spin = useCallback(() => {
     if (isSpinning) return;
     setIsSpinning(true);
 
-    // Shuffle emojis visually while spinning
     shuffleTimer.current = setInterval(() => {
       setDisplayEmojis(pickEmojis());
     }, 120);
 
     const spins = 4 + Math.random() * 2;
-    const target = rotation.value - spins * 360;
+    const target = currentDeg.current - spins * 360;
+    currentDeg.current = target;
 
-    rotation.value = withTiming(target, {
+    Animated.timing(rotationDeg, {
+      toValue: target,
       duration: 3600,
       easing: Easing.out(Easing.poly(4)),
-    }, (finished) => {
-      if (finished) {
-        runOnJS(cleanup)();
-      }
-    });
-
-    function cleanup() {
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (!finished) return;
       if (shuffleTimer.current) clearInterval(shuffleTimer.current);
       setIsSpinning(false);
-      onSpinEnd();
-    }
-  }, [isSpinning, rotation, onSpinEnd]);
+      onSpinEndRef.current();
+    });
+  }, [isSpinning, rotationDeg]);
+
+  const rotation = rotationDeg.interpolate({
+    inputRange: [-360000, 360000],
+    outputRange: ['-360000deg', '360000deg'],
+  });
 
   return { rotation, isSpinning, displayEmojis, spin };
 }

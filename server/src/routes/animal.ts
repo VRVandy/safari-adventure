@@ -34,7 +34,7 @@ animalRouter.post('/', async (req: Request, res: Response) => {
       messages: [{
         role: 'user',
         content: `Pick ONE random ${randomClass} from ${randomContinent} (random seed: ${seed}). ${exclusion}
-Avoid: deep ocean or abyssal creatures (anglerfish, blobfish, gulper eel, giant squid, etc.), venomous or dangerous spiders and insects (funnel-web spider, bullet ant, giant centipede, etc.), and parasites or microscopic organisms (tapeworm, botfly, tongue louse, etc.). Choose an animal that is visually appealing and not frightening to a 4-year-old child.
+Strongly prefer obscure, lesser-known species that most people have never heard of — avoid the most famous or iconic examples of the class. Avoid: deep ocean or abyssal creatures (anglerfish, blobfish, gulper eel, giant squid, etc.), venomous or dangerous spiders and insects (funnel-web spider, bullet ant, giant centipede, etc.), and parasites or microscopic organisms (tapeworm, botfly, tongue louse, etc.). Choose an animal that is visually appealing and not frightening to a 4-year-old child.
 Return ONLY valid JSON, no markdown, no extra text:
 {
   "name": "common animal name",

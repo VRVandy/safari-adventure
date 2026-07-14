@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { View, StyleSheet, Pressable, Text, Animated } from 'react-native';
 import Svg, { Path, Text as SvgText } from 'react-native-svg';
-import Animated, { useAnimatedStyle, SharedValue } from 'react-native-reanimated';
 import { colors, sectorColors } from '@/constants/theme';
 
 const SIZE = 300;
@@ -27,26 +26,20 @@ function emojiPosition(index: number) {
 }
 
 interface Props {
-  rotation: SharedValue<number>;
+  rotation: Animated.AnimatedInterpolation<string>;
   emojis: string[];
   centerEmoji: string;
   onSpin: () => void;
   disabled: boolean;
 }
 
-const AnimatedView = Animated.createAnimatedComponent(View);
-
 export function SpinWheel({ rotation, emojis, centerEmoji, onSpin, disabled }: Props) {
-  const style = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
-
   return (
     <View style={styles.container}>
       {/* Pointer */}
       <View style={styles.pointer} />
 
-      <AnimatedView style={[styles.wheelWrap, style]}>
+      <Animated.View style={[styles.wheelWrap, { transform: [{ rotate: rotation }] }]}>
         <Svg width={SIZE} height={SIZE}>
           {Array.from({ length: N }, (_, i) => (
             <React.Fragment key={i}>
@@ -68,7 +61,7 @@ export function SpinWheel({ rotation, emojis, centerEmoji, onSpin, disabled }: P
             </React.Fragment>
           ))}
         </Svg>
-      </AnimatedView>
+      </Animated.View>
 
       {/* Center emoji overlay (not rotated) */}
       <View style={styles.center} pointerEvents="none">
