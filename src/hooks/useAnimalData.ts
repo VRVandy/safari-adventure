@@ -6,7 +6,7 @@ import { fetchWikiSound } from '@/lib/wikiSound';
 
 type Phase = 'spin' | 'confirm' | 'result';
 
-export function useAnimalData() {
+export function useAnimalData(sessionId: string) {
   const [phase, setPhase] = useState<Phase>('spin');
   const [spinCount, setSpinCount] = useState(0);
   const [pickedAnimals, setPickedAnimals] = useState<Animal[]>([]);
@@ -26,7 +26,7 @@ export function useAnimalData() {
   // Stage 1: fetch only the Claude animal — resolves fast so the wheel
   // reveal is instant. Image + sound are fetched separately in stage 2.
   const startFetch = useCallback((): Promise<Animal | null> => {
-    return fetchAnimal(previousNames.current)
+    return fetchAnimal(previousNames.current, sessionId)
       .then(animal => {
         const updated = [...previousNames.current, animal.name].slice(-20);
         previousNames.current = updated;
@@ -34,7 +34,7 @@ export function useAnimalData() {
         return animal;
       })
       .catch(() => null);
-  }, []);
+  }, [sessionId]);
 
   // Stage 2: enrich a committed animal with image + sound in the background.
   // Updates the matching entry in pickedAnimals when both arrive.

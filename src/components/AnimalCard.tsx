@@ -7,9 +7,10 @@ import { fetchMoreFacts } from '@/lib/api';
 
 interface Props {
   animal: Animal;
+  sessionId?: string;
 }
 
-export function AnimalCard({ animal }: Props) {
+export function AnimalCard({ animal, sessionId }: Props) {
   const [facts, setFacts] = useState(animal.facts);
   const [loadingMore, setLoadingMore] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -17,7 +18,7 @@ export function AnimalCard({ animal }: Props) {
   async function handleMoreFacts() {
     setLoadingMore(true);
     try {
-      const more = await fetchMoreFacts(animal, facts);
+      const more = await fetchMoreFacts(animal, facts, sessionId);
       setFacts(prev => [...prev, ...more]);
     } catch {}
     setLoadingMore(false);

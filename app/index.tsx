@@ -10,13 +10,18 @@ import { useAnimalData } from '@/hooks/useAnimalData';
 import { colors } from '@/constants/theme';
 import { Animal } from '@/types/animal';
 
+function generateSessionId(): string {
+  return Date.now().toString(16) + Math.random().toString(16).slice(2, 10);
+}
+
 export default function HomeScreen() {
   const [confetti, setConfetti] = useState(false);
   const [centerEmoji, setCenterEmoji] = useState('?');
   const [showWheel, setShowWheel] = useState(true);
   const fetchPromiseRef = useRef<Promise<Animal | null> | null>(null);
+  const sessionIdRef = useRef<string>(generateSessionId());
 
-  const { phase, spinCount, pickedAnimals, startFetch, commitSpin, confirmAnimals, rejectLastSpin, reset } = useAnimalData();
+  const { phase, spinCount, pickedAnimals, startFetch, commitSpin, confirmAnimals, rejectLastSpin, reset } = useAnimalData(sessionIdRef.current);
 
   function handleSpinEnd() {
     // Clear the ref immediately — prevents double-fire on Android
@@ -128,10 +133,10 @@ export default function HomeScreen() {
               </View>
 
               {pickedAnimals.map((animal, i) => (
-                <AnimalCard key={animal.name + i} animal={animal} />
+                <AnimalCard key={animal.name + i} animal={animal} sessionId={sessionIdRef.current} />
               ))}
 
-              <Pressable style={styles.resetBtn} onPress={() => { reset(); setShowWheel(true); setCenterEmoji('?'); }}>
+              <Pressable style={styles.resetBtn} onPress={() => { sessionIdRef.current = generateSessionId(); reset(); setShowWheel(true); setCenterEmoji('?'); }}>
                 <Text style={styles.resetBtnText}>New expedition!</Text>
               </Pressable>
             </View>

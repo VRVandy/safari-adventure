@@ -48,7 +48,7 @@ function getNextMockAnimal(): Animal {
 }
 
 // ── Real API calls ──────────────────────────────────────────────────────────
-export async function fetchAnimal(previousAnimals: string[]): Promise<Animal> {
+export async function fetchAnimal(previousAnimals: string[], sessionId?: string): Promise<Animal> {
   if (USE_MOCK) {
     // Simulate network delay
     await new Promise(r => setTimeout(r, 1200));
@@ -57,7 +57,7 @@ export async function fetchAnimal(previousAnimals: string[]): Promise<Animal> {
   const res = await fetch(`${SERVER_URL}/api/animal`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ previousAnimals }),
+    body: JSON.stringify({ previousAnimals, sessionId }),
   });
   if (!res.ok) throw new Error(`Server error ${res.status}`);
   return res.json();
@@ -65,7 +65,8 @@ export async function fetchAnimal(previousAnimals: string[]): Promise<Animal> {
 
 export async function fetchMoreFacts(
   animal: Animal,
-  existingFacts: string[]
+  existingFacts: string[],
+  sessionId?: string,
 ): Promise<string[]> {
   if (USE_MOCK) {
     await new Promise(r => setTimeout(r, 800));
@@ -78,7 +79,7 @@ export async function fetchMoreFacts(
   const res = await fetch(`${SERVER_URL}/api/animal/more-facts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ animal, existingFacts }),
+    body: JSON.stringify({ animal, existingFacts, sessionId }),
   });
   if (!res.ok) throw new Error(`Server error ${res.status}`);
   const data = await res.json();

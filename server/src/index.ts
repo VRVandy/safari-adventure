@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { animalRouter } from './routes/animal';
+import { flushAll } from './tracing';
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);
@@ -31,3 +32,6 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.listen(port, () => {
   console.log(`Safari Adventure server running on http://localhost:${port}`);
 });
+
+process.on('SIGTERM', () => { flushAll(); process.exit(0); });
+process.on('SIGINT',  () => { flushAll(); process.exit(0); });
